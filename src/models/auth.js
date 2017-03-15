@@ -30,8 +30,8 @@ Auth.create = (user, func) => {
         if (err || (res.statusCode === status.INTERNAL_SERVER_ERROR)) {
             func(err, res);
         } else {
-            console.log(body);
-            if (body) {
+            body = JSON.parse(body);
+            if (body && !body.error) {
                 func(null, {statusCode: status.FOUND}, body);
             } else {
                 let expiry = new Date();
@@ -39,6 +39,7 @@ Auth.create = (user, func) => {
 
                 const token = jwt.sign({
                     id: user.id,
+                    rev: user.rev,
                     email: user.email,
                     name: user.name,
                     exp: parseInt(expiry.getTime() / 1000),
@@ -47,7 +48,7 @@ Auth.create = (user, func) => {
                 request({
                     method: 'PUT',
                     url: `${dbUrl}/${user.id}`,
-                    json: token
+                    json: {token}
                 }, func);
             }
         }
@@ -55,11 +56,12 @@ Auth.create = (user, func) => {
 };
 
 Auth.validate = (token, rev, func) => {
-    jwt.verify(token, secret, (err, decoded) => {
+    jwt.verify(token.token, secret, (err, decoded) => {
+        console.log(decoded);
         if (err) {
             func(err, {statusCode: status.BAD_REQUEST})
         } else {
-            request.get(`${dbUrl}/${decoded.id}`, func);
+            request.get(`${dbUrl}/${decoded.id}?rev=${decoded.rev}`, func);
         }
     });
 };

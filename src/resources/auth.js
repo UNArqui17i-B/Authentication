@@ -8,8 +8,8 @@ module.exports = function (Auth) {
 
     // creates a token
     router.post('/login', function (req, res) {
-        Auth.create((err, header, body) => {
-            if (body) {
+        Auth.create(req.body, (err, header, body) => {
+            if (body && header.statusCode !== status.FOUND) {
                 res.status(status.CREATED).send(body);
             } else {
                 res.status(header.statusCode).send({});
@@ -19,11 +19,11 @@ module.exports = function (Auth) {
 
     // validates a token
     router.post('/validate', function (req, res) {
-        Auth.validate((err, header, body) => {
+        Auth.validate(req.body, (err, header, body) => {
             if (body) {
                 res.status(status.OK).send(body);
             } else {
-                res.status(header.statusCode).send({});
+                res.status(header.statusCode).send(body || {});
             }
         });
     });
