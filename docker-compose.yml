@@ -1,0 +1,16 @@
+version: '2'
+services:
+  couch_db:
+    image: klaemo/couchdb:2.0.0
+    ports:
+      - '3005:5984'
+
+  user_ms:
+    build: .
+    environment:
+      PORT: '5984'
+      ROOT_URL: 'couch_db'
+    ports:
+      - '4005:4005'
+    links:
+      - couch_db
