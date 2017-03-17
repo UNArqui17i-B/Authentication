@@ -47,8 +47,11 @@ Auth.create = (user, func) => {
 
                 request({
                     method: 'PUT',
-                    url: `${dbUrl}/${user.id}`,
-                    json: {token}
+                    url: `${dbUrl}/${user.id}?new_edits=false`,
+                    json: {
+                        token: token,
+                        rev: user.rev
+                    }
                 }, func);
             }
         }
@@ -58,6 +61,7 @@ Auth.create = (user, func) => {
 Auth.validate = (token, rev, func) => {
     jwt.verify(token.token, secret, (err, decoded) => {
         console.log(decoded);
+        console.log(`${dbUrl}/${decoded.id}?rev=${decoded.rev}`);
         if (err) {
             func(err, {statusCode: status.BAD_REQUEST})
         } else {
