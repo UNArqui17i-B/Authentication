@@ -7,12 +7,12 @@ module.exports = function (Auth) {
     const router = express.Router();
 
     // creates a token
-    router.post('/login', function (req, res) {
-        Auth.create(req.body, (err, header, body) => {
-            if (body && header.statusCode !== status.FOUND) {
-                res.status(status.CREATED).send(body);
+    router.get('/login/:id', function (req, res) {
+        Auth.create(req.params.id, (err, header, body) => {
+            if (err) {
+                res.status(header.statusCode || status.BAD_REQUEST).send(body);
             } else {
-                res.status(header.statusCode).send({});
+                res.status(header.statusCode).send(body);
             }
         });
     });

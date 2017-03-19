@@ -3,24 +3,12 @@ title: Authentication API
 baseUri: http://localhost:4005
 mediaType: application/json
 
-# Possible types
-types:
-    User:
-        type: object
-        properties:
-            id: string
-            name: string
-            email: string
-
-# Routes
 /authentication:
     description: Authentication management
 
-    /login:
-        post:
-            description: Creates token for user
-            body:
-                type: User
+    /login/{id}:
+        get:
+            description: Read token for user
     
     /validate:
         post:

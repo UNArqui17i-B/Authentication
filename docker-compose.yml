@@ -3,9 +3,9 @@ services:
   couch_db:
     image: klaemo/couchdb:2.0.0
     ports:
-      - '3005:5984'
+      - '3000:5984'
 
-  user_ms:
+  auth_ms:
     build: .
     environment:
       PORT: '5984'

@@ -8,64 +8,73 @@ const jwt = require('jsonwebtoken');
 const PORT = process.env.PORT || 5984;
 const ROOT_URL = process.env.ROOT_URL || 'localhost';
 const url = `http://${ROOT_URL}:${PORT}/`;
-const dbUrl = url + 'blinkbox_auth';
+const dbUrl = url + 'blinkbox_users';
 
 const secret = process.env.SECRET || 'blinkbox is cool';
 
 let Auth = {};
 
 Auth.checkDB = (func) => {
-    // eslint-disable-next-line no-unused-vars
     request.head(dbUrl, (err, res, body) => {
         if (err || (res.statusCode === status.INTERNAL_SERVER_ERROR)) {
-            func(err, res);
+            func(err, res, body);
         } else {
             request.put(dbUrl, func);
         }
     });
 };
 
-Auth.create = (user, func) => {
-    request.get(`${dbUrl}/${user.id}`, (err, res, body) => {
+Auth.create = (id, func) => {
+    request.get(`${dbUrl}/${id}`, (err, res, body) => {
         if (err || (res.statusCode === status.INTERNAL_SERVER_ERROR)) {
             func(err, res);
         } else {
             body = JSON.parse(body);
-            if (body && !body.error) {
-                func(null, {statusCode: status.FOUND}, body);
+
+            if (body.error) {
+                // if the user doesn't exist
+                func(true, {statusCode: status.NOT_FOUND}, {});
+            } else if (body.token) {
+                // token already existing
+                func(null, {statusCode: status.FOUND}, {token: body.token, expDate: body.expDate});
             } else {
+                // creates token
                 let expiry = new Date();
                 expiry.setDate(expiry.getDate() + 7);
 
+                const expDate = parseInt(expiry.getTime() / 1000);
                 const token = jwt.sign({
-                    id: user.id,
-                    rev: user.rev,
-                    email: user.email,
-                    name: user.name,
-                    exp: parseInt(expiry.getTime() / 1000),
+                    id: body.id,
+                    email: body.email,
+                    name: body.name,
+                    exp: expDate
                 }, secret);
+                body.token = token;
+                body.expDate = expDate;
 
                 request({
                     method: 'PUT',
-                    url: `${dbUrl}/${user.id}?new_edits=false`,
-                    json: {
-                        token: token,
-                        rev: user.rev
+                    url: `${dbUrl}/${id}`,
+                    json: body
+                }, (err, header, body) => {
+                    if (err) {
+                        func(err, header, body);
+                    } else {
+                        func(null, {statusCode: status.CREATED}, {token: token, expDate: expDate});
                     }
-                }, func);
+                });
             }
         }
     });
 };
 
-Auth.validate = (token, rev, func) => {
+Auth.validate = (token, func) => {
     jwt.verify(token.token, secret, (err, decoded) => {
-        console.log(decoded);
-        console.log(`${dbUrl}/${decoded.id}?rev=${decoded.rev}`);
         if (err) {
-            func(err, {statusCode: status.BAD_REQUEST})
+            func(err, {statusCode: status.BAD_REQUEST});
         } else {
-            request.get(`${dbUrl}/${decoded.id}?rev=${decoded.rev}`, func);
+            console.log(decoded);
+            func(null, {statusCode: status.OK}, decoded);
         }
     });
 };
