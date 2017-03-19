@@ -4,12 +4,15 @@ baseUri: http://localhost:4005
 mediaType: application/json
 
 /authentication:
-    description: User management
+    description: Authentication management
 
-    /login:
-        post:
-            description: Creates token for user
+    /login/{id}:
+        get:
+            description: Read token for user
     
     /validate:
         post:
             description: Check valid token
+            body:
+                properties:
+                    token: string
