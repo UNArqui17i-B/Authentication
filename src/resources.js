@@ -19,7 +19,7 @@ Auth.checkDB((err) => {
 });
 
 // routes
-app.use('/authentication', require('./resources/auth')(Auth));
+app.use('/authentication', require('./services/auth')(Auth));
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
