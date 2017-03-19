@@ -22,4 +22,4 @@ docker-compose up
 [codecov-image]: https://img.shields.io/codecov/c/github/UNArqui17i-B/Authentication.svg?style=flat-square
 [codecov-url]: https://codecov.io/gh/UNArqui17i-B/Authentication
 [docker-image]: https://img.shields.io/badge/docker-image-blue.svg?style=flat-square
-[docker-url]: https://hub.docker.com/r/blinkbox/user-crud
+[docker-url]: https://hub.docker.com/r/blinkbox/authentication
