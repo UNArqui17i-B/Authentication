@@ -20,5 +20,12 @@ module.exports = function (Auth) {
             .catch((err) => res.status(status.BAD_REQUEST).send(err));
     });
 
+    // email verification
+    router.put('/email/:id', function (req, res) {
+        Auth.emailVerification(req.params.id)
+            .then((body) => res.status(status.OK).send(body))
+            .catch((err) => res.status(status.BAD_REQUEST).send(err));
+    });
+
     return router;
 };

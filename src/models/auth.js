@@ -19,48 +19,70 @@ Auth.checkDB = request.head(dbUrl)
     .then((body) => Promise.resolve(body))
     .catch(() => request.put(dbUrl));
 
-Auth.create = (id) => new Promise((resolve, reject) => {
-    request.get(`${dbUrl}/${id}`)
-        .then((body) => {
-            body = JSON.parse(body);
+Auth.create = (id) => request.get(`${dbUrl}/${id}`)
+    .then((user) => {
+        user = JSON.parse(user);
 
-            if (body.error) {
-                reject(body.error);
-            } else if (body.token) {
+        // not confirmed
+        if (user.notValidated) {
+            return {
+                status: status.UNAUTHORIZED,
+                body: {
+                    status: 'Email not confirmed'
+                }
+            };
+        }
+
+        if (user.token) {
+            // token exists
+            const currentDate = new Date();
+            if (user.expDate > currentDate) {
+                // token expired
+                return user;
+            } else {
                 // token already exists
-                resolve({
+                return {
                     status: status.FOUND,
                     body: {
-                        token: body.token,
-                        expDate: body.expDate
+                        token: user.token,
+                        expDate: user.expDate
                     }
-                });
-            } else {
-                // creates token
-                let expiry = new Date();
-                expiry.setDate(expiry.getDate() + 7);
-
-                const expDate = parseInt(expiry.getTime() / 1000);
-                const token = jwt.sign({
-                    id: body.id,
-                    email: body.email,
-                    name: body.name,
-                    exp: expDate
-                }, secret);
-                body.token = token;
-                body.expDate = expDate;
-
-                request({
-                    method: 'PUT',
-                    url: `${dbUrl}/${id}`,
-                    json: body
-                }).then(() => resolve({
-                    status: status.CREATED,
-                    body: {token, expDate}
-                })).catch(reject);
+                };
             }
-        }).catch(reject);
-});
+        } else {
+            // token doesn't exists
+            return user;
+        }
+    }).then((user) => {
+        if (user.status) {
+            return user;
+        } else {
+            // creates token
+            let expiry = new Date();
+            expiry.setDate(expiry.getDate() + 7);
+
+            const expDate = parseInt(expiry.getTime() / 1000);
+            user.token = jwt.sign({
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                exp: expDate
+            }, secret);
+            user.expDate = expDate;
+
+            return request({
+                method: 'PUT',
+                url: `${dbUrl}/${id}`,
+                json: user
+            }).then(() => ({
+                status: status.CREATED,
+                body: {
+                    token: user.token,
+                    expDate: user.expDate
+                }
+            }));
+        }
+    });
 
 Auth.validate = (token) => new Promise((resolve, reject) => {
     try {
@@ -68,6 +90,24 @@ Auth.validate = (token) => new Promise((resolve, reject) => {
         resolve(decoded);
     } catch (err) {
         reject(err);
+    }
+});
+
+Auth.emailVerification = (id) => request.get(`${dbUrl}/${id}`).then((user) => {
+    user = JSON.parse(user);
+
+    if (user.notValidated) {
+        delete user.notValidated;
+
+        return request({
+            method: 'PUT',
+            url: `${dbUrl}/${id}`,
+            json: user
+        });
+    } else {
+        return Promise.resolve({
+            id, status: 'Already verified'
+        });
     }
 });
 
