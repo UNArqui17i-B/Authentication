@@ -5,6 +5,8 @@ const status = require('http-status');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 
+const HOST_PORT = Number(process.env.HOST_PORT) || 4005;
+
 let app = express();
 
 // config
@@ -13,9 +15,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 const Auth = require('./models/auth');
-Auth.checkDB((err) => {
-    // eslint-disable-next-line no-console
-    if (err) console.error(err);
+
+// eslint-disable-next-line no-console
+Auth.checkDB.catch(console.error);
+
+// json content-type
+app.use(function (req, res, next) {
+    res.header('Content-Type', 'application/json');
+    next();
 });
 
 // routes
@@ -39,5 +46,5 @@ app.use(function (err, req, res) {
     res.send({'error': err.message});
 });
 
-app.listen(4005);
+app.listen(HOST_PORT);
 

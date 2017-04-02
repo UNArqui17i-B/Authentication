@@ -8,24 +8,23 @@ module.exports = function (Auth) {
 
     // creates a token
     router.get('/login/:id', function (req, res) {
-        Auth.create(req.params.id, (err, header, body) => {
-            if (err) {
-                res.status(header.statusCode || status.BAD_REQUEST).send(body);
-            } else {
-                res.status(header.statusCode).send(body);
-            }
-        });
+        Auth.create(req.params.id)
+            .then((ans) => res.status(ans.status).send(ans.body))
+            .catch((err) => res.status(status.BAD_REQUEST).send(err));
     });
 
     // validates a token
     router.post('/validate', function (req, res) {
-        Auth.validate(req.body, (err, header, body) => {
-            if (body) {
-                res.status(status.OK).send(body);
-            } else {
-                res.status(header.statusCode).send(body || {});
-            }
-        });
+        Auth.validate(req.body)
+            .then((body) => res.status(status.OK).send(body))
+            .catch((err) => res.status(status.BAD_REQUEST).send(err));
+    });
+
+    // email verification
+    router.put('/email/:id', function (req, res) {
+        Auth.emailVerification(req.params.id)
+            .then((body) => res.status(status.OK).send(body))
+            .catch((err) => res.status(status.BAD_REQUEST).send(err));
     });
 
     return router;
