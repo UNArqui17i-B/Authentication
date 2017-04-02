@@ -9,7 +9,7 @@ const DB_PORT = process.env.DB_PORT || 5984;
 const DB_URL = process.env.DB_URL || 'localhost';
 const DB_NAME = process.env.DB_NAME || 'blinkbox_users';
 const url = `http://${DB_URL}:${DB_PORT}/`;
-const dbUrl = url + DB_NAME;
+const dbUrl = url + DB_NAME
 
 const secret = process.env.JWT_SECRET || 'blinkbox is cool';
 
