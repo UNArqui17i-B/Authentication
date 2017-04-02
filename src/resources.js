@@ -5,6 +5,8 @@ const status = require('http-status');
 const logger = require('morgan');
 const bodyParser = require('body-parser');
 
+const HOST_PORT = Number(process.env.HOST_PORT) || 4005;
+
 let app = express();
 
 // config
@@ -39,5 +41,5 @@ app.use(function (err, req, res) {
     res.send({'error': err.message});
 });
 
-app.listen(4005);
+app.listen(HOST_PORT);
 

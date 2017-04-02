@@ -9,8 +9,8 @@ services:
     build: .
     environment:
       DB_PORT: '5984'
-      DB_ROOT_URL: 'users_db'
-      SECRET: 'ec6607e21b57ac2ccc5836754893ed33' # Put your own secret!
+      DB_URL: 'users_db'
+      JWT_SECRET: 'ec6607e21b57ac2ccc5836754893ed33' # Put your own secret!
     ports:
       - '4005:4005'
     links:
