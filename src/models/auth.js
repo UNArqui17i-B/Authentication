@@ -1,6 +1,6 @@
 'use strict';
 
-const request = require('request');
+const request = require('request-promise');
 const status = require('http-status');
 const jwt = require('jsonwebtoken');
 
@@ -15,29 +15,26 @@ const secret = process.env.JWT_SECRET || 'blinkbox is cool';
 
 let Auth = {};
 
-Auth.checkDB = (func) => {
-    request.head(dbUrl, (err, res, body) => {
-        if (err || (res.statusCode === status.INTERNAL_SERVER_ERROR)) {
-            func(err, res, body);
-        } else {
-            request.put(dbUrl, func);
-        }
-    });
-};
+Auth.checkDB = request.head(dbUrl)
+    .then((body) => Promise.resolve(body))
+    .catch(() => request.put(dbUrl));
 
-Auth.create = (id, func) => {
-    request.get(`${dbUrl}/${id}`, (err, res, body) => {
-        if (err || (res.statusCode === status.INTERNAL_SERVER_ERROR)) {
-            func(err, res);
-        } else {
+Auth.create = (id) => new Promise((resolve, reject) => {
+    request.get(`${dbUrl}/${id}`)
+        .then((body) => {
             body = JSON.parse(body);
 
             if (body.error) {
-                // if the user doesn't exist
-                func(true, {statusCode: status.NOT_FOUND}, {});
+                reject(body.error);
             } else if (body.token) {
-                // token already existing
-                func(null, {statusCode: status.FOUND}, {token: body.token, expDate: body.expDate});
+                // token already exists
+                resolve({
+                    status: status.FOUND,
+                    body: {
+                        token: body.token,
+                        expDate: body.expDate
+                    }
+                });
             } else {
                 // creates token
                 let expiry = new Date();
@@ -57,27 +54,21 @@ Auth.create = (id, func) => {
                     method: 'PUT',
                     url: `${dbUrl}/${id}`,
                     json: body
-                }, (err, header, body) => {
-                    if (err) {
-                        func(err, header, body);
-                    } else {
-                        func(null, {statusCode: status.CREATED}, {token: token, expDate: expDate});
-                    }
-                });
+                }).then(() => resolve({
+                    status: status.CREATED,
+                    body: {token, expDate}
+                })).catch(reject);
             }
-        }
-    });
-};
+        }).catch(reject);
+});
 
-Auth.validate = (token, func) => {
-    jwt.verify(token.token, secret, (err, decoded) => {
-        if (err) {
-            func(err, {statusCode: status.BAD_REQUEST});
-        } else {
-            console.log(decoded);
-            func(null, {statusCode: status.OK}, decoded);
-        }
-    });
-};
+Auth.validate = (token) => new Promise((resolve, reject) => {
+    try {
+        const decoded = jwt.verify(token.token, secret);
+        resolve(decoded);
+    } catch (err) {
+        reject(err);
+    }
+});
 
 module.exports = Auth;

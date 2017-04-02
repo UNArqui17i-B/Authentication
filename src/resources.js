@@ -15,9 +15,14 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
 const Auth = require('./models/auth');
-Auth.checkDB((err) => {
-    // eslint-disable-next-line no-console
-    if (err) console.error(err);
+
+// eslint-disable-next-line no-console
+Auth.checkDB.catch(console.error);
+
+// json content-type
+app.use(function (req, res, next) {
+    res.header('Content-Type', 'application/json');
+    next();
 });
 
 // routes
