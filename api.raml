@@ -6,9 +6,14 @@ mediaType: application/json
 /authentication:
     description: Authentication management
 
-    /login/{id}:
-        get:
-            description: Read token for user
+    /login:
+        post:
+            description: Authenticate user and generates token
+            body:
+                type: object
+                properties:
+                    email: string
+                    password: string
     
     /validate:
         post:

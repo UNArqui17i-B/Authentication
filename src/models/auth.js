@@ -3,15 +3,23 @@
 const request = require('request-promise');
 const status = require('http-status');
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
+const Joi = require('joi');
 
 // CouchDB url
 const DB_PORT = process.env.DB_PORT || 5984;
 const DB_URL = process.env.DB_URL || 'localhost';
 const DB_NAME = process.env.DB_NAME || 'blinkbox_users';
 const url = `http://${DB_URL}:${DB_PORT}/`;
-const dbUrl = url + DB_NAME
+const dbUrl = url + DB_NAME;
 
 const secret = process.env.JWT_SECRET || 'blinkbox is cool';
+
+// User schema
+const loginSchema = Joi.object().keys({
+    email: Joi.string().email().required(),
+    password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required()
+});
 
 let Auth = {};
 
@@ -19,10 +27,38 @@ Auth.checkDB = request.head(dbUrl)
     .then((body) => Promise.resolve(body))
     .catch(() => request.put(dbUrl));
 
-Auth.create = (id) => request.get(`${dbUrl}/${id}`)
-    .then((user) => {
-        user = JSON.parse(user);
+Auth.create = (user) => new Promise((resolve, reject) => {
+        const result = Joi.validate(user, loginSchema);
 
+        if (result.error) {
+            reject(result.error);
+        } else {
+            const query = {
+                selector: {
+                    email: user.email
+                }
+            };
+
+            resolve(request({
+                method: 'POST',
+                url: `${dbUrl}/_find`,
+                json: query
+            }));
+        }
+    }).then((body) => {
+        const finded = body.docs[0];
+
+        // decrypt password
+        const hash = crypto.pbkdf2Sync(user.password, finded.salt, 1000, 224, 'sha224').toString('hex');
+        if (hash === finded.hash) {
+            return body;
+        } else {
+            return {
+                status: status.UNAUTHORIZED,
+                body: {}
+            };
+        }
+    }).then((user) => {
         // not confirmed
         if (user.notValidated) {
             return {
