@@ -100,8 +100,9 @@ Auth.create = (user) => new Promise((resolve, reject) => {
             const expDate = parseInt(expiry.getTime() / 1000);
             user.token = jwt.sign({
                 id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 email: user.email,
-                name: user.name,
                 exp: expDate
             }, secret);
             user.expDate = expDate;
