@@ -27,7 +27,8 @@ Auth.checkDB = request.head(dbUrl)
     .then((body) => Promise.resolve(body))
     .catch(() => request.put(dbUrl));
 
-Auth.create = (user) => new Promise((resolve, reject) => {
+Auth.create = (user) => new Promise(
+    (resolve, reject) => {
         const result = Joi.validate(user, loginSchema);
 
         if (result.error) {
@@ -107,7 +108,7 @@ Auth.create = (user) => new Promise((resolve, reject) => {
             }, secret);
             user.expDate = expDate;
 
-            request({
+            return request({
                 method: 'PUT',
                 url: `${dbUrl}/${user._id}`,
                 json: user
