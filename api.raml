@@ -19,9 +19,10 @@ mediaType: application/json
         post:
             description: Check valid token
             body:
+            	type: object
                 properties:
                     token: string
 
     /email/{id}:
         put:
-            description: Verifies token for user
+            description: Verifies user from email

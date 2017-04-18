@@ -21,7 +21,6 @@ module.exports = function (Auth) {
     });
 
     // email verification
-
     router.put('/email/:id', function (req, res) {
         Auth.emailVerification(req.params.id)
             .then((body) => res.status(status.OK).send(body))

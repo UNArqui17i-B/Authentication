@@ -51,7 +51,7 @@ Auth.create = (user) => new Promise((resolve, reject) => {
         // decrypt password
         const hash = crypto.pbkdf2Sync(user.password, finded.salt, 1000, 224, 'sha224').toString('hex');
         if (hash === finded.hash) {
-            return body;
+            return finded;
         } else {
             return {
                 status: status.UNAUTHORIZED,
@@ -107,17 +107,17 @@ Auth.create = (user) => new Promise((resolve, reject) => {
             }, secret);
             user.expDate = expDate;
 
-            return request({
+            request({
                 method: 'PUT',
-                url: `${dbUrl}/${id}`,
+                url: `${dbUrl}/${user._id}`,
                 json: user
-            }).then(() => ({
+            }).then(() => Promise.resolve({
                 status: status.CREATED,
                 body: {
                     token: user.token,
                     expDate: user.expDate
                 }
-            }));
+            })).catch((err) => Promise.reject(err));
         }
     });
 
