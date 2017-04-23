@@ -79,7 +79,7 @@ Auth.create = (user) => new Promise(
             } else {
                 // token already exists
                 return {
-                    status: status.FOUND,
+                    status: status.ACCEPTED,
                     body: {
                         id: user.id,
                         firstName: user.firstName,
