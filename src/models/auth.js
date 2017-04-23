@@ -81,6 +81,10 @@ Auth.create = (user) => new Promise(
                 return {
                     status: status.FOUND,
                     body: {
+                        id: user.id,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email: user.email,
                         token: user.token,
                         expDate: user.expDate
                     }
@@ -115,6 +119,10 @@ Auth.create = (user) => new Promise(
             }).then(() => Promise.resolve({
                 status: status.CREATED,
                 body: {
+                    id: user.id,
+                    firstName: user.firstName,
+                    lastName: user.lastName,
+                    email: user.email,
                     token: user.token,
                     expDate: user.expDate
                 }
