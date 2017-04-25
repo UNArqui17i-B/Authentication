@@ -56,7 +56,9 @@ Auth.create = (user) => new Promise(
         } else {
             return {
                 status: status.UNAUTHORIZED,
-                body: {}
+                body: {
+                    status: 'Password incorrect'
+                }
             };
         }
     }).then((user) => {
